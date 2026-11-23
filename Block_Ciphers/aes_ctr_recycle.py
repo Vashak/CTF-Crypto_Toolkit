@@ -23,7 +23,6 @@ log.info("--- ATTACCO 'RECYCLE' (NO CRASH) ---")
 r.sendlineafter(b"> ", b"3")
 r.sendlineafter(b"> ", b"00" * 14 + b"01")
 
-# 2. CATTURIAMO LA FLAG
 r.sendlineafter(b"> ", b"2")
 c_flag = bytes.fromhex(r.recvline().decode().strip())
 log.success(f"Flag catturata! (Lunga {len(c_flag)} byte)")
@@ -34,7 +33,6 @@ r.sendlineafter(b"> ", b"3")
 r.sendlineafter(b"> ", b"00" * 14)
 log.info("Nonce accorciato a 14 byte per prevenire il crash.")
 
-# 4. SPAM (252 colpi per arrivare a 256)
 spari = 252
 log.info(f"Lancio {spari} spari per l'allineamento...")
 r.send(b"1\n" * spari)
@@ -48,7 +46,6 @@ for i in range(spari):
 
 log.success("Counter a 256. Allineamento perfetto coi blocchi della flag!")
 
-# 5. RECUPERO DEI KEYSTREAM PER TUTTA LA FLAG
 # La flag è lunga 4 blocchi (52 byte), quindi ci servono i prossimi 4 keystream
 all_keystreams = b""
 log.info("Estrazione dei 4 veli crittografici...")
@@ -60,12 +57,48 @@ for i in range(4):
     c_rand = bytes.fromhex(line[1])
     all_keystreams += xor(p_rand, c_rand)
 
-# 6. IL COLPO FINALE
-final_flag = xor(c_flag, all_keystreams)
 
-print("\n" + "🌟" * 25)
-# Stampiamo rimuovendo i caratteri extra alla fine
+final_flag = xor(c_flag, all_keystreams)
 print(f"FLAG: {final_flag.decode(errors='ignore')}")
-print("🌟" * 25)
 
 r.close()
+"""
+
+from Crypto.Cipher import AES
+import os
+import math
+
+flag = os.getenv("FLAG", "CCIT{redacted}")
+
+flag = flag.encode()
+key = os.urandom(16)
+nonce = os.urandom(8)
+
+cipher = AES.new(key, AES.MODE_CTR, nonce = nonce, initial_value = 0)
+counter_value = 0
+
+while True:
+    print("What do you want to do?")
+    print("1. Encrypt a block")
+    print("2. Encrypt the flag")
+    print("3. Change nonce")
+    try:
+        choice = int(input("> "))
+
+        if choice == 3:
+            nonce = bytes.fromhex(input("> ").strip())
+        elif choice == 1:
+            block = os.urandom(16)
+            cipher = AES.new(key, AES.MODE_CTR, nonce = nonce, initial_value = counter_value)
+            enc = cipher.encrypt(block)
+            print(block.hex(), enc.hex())
+            counter_value += 1
+        elif choice == 2:
+            cipher = AES.new(key, AES.MODE_CTR, nonce = nonce, initial_value = counter_value)
+            enc = cipher.encrypt(flag)
+            print(enc.hex())
+            counter_value += math.ceil(len(flag)/16)
+    except:
+        print("Something went wrong")
+        exit()
+"""
