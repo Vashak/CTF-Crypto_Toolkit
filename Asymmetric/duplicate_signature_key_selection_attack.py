@@ -71,3 +71,47 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
+
+import signal
+import os
+import random
+from Crypto.Util.number import inverse, getStrongPrime, isPrime
+from hashlib import sha256
+
+TIMEOUT = 300
+
+assert("FLAG" in os.environ)
+FLAG = os.environ["FLAG"]
+assert(FLAG.startswith("CCIT{"))
+assert(FLAG.endswith("}"))
+
+
+def handle():
+    p, q = getStrongPrime(1024), getStrongPrime(1024)
+    H = int(sha256(FLAG.encode()).hexdigest(),16)
+    n = p*q
+    e = random.randint(0,n)
+    d = inverse(e, (p-1)*(q-1))
+
+    sig = pow(H,d,n)
+    print(f"Hash of the flag: {H}")
+    print(f"Signature: {sig}")
+    print("What is the key?")
+    p_user = int(input("First prime factor: "))
+    q_user = int(input("Second prime factor: "))
+    e_user = int(input("Public exponent: "))
+    if e_user<2 or p_user.bit_length() < 512 or q_user.bit_length() < 512 or p_user == q_user or p_user<0 or q_user<0 or isPrime(p_user) == False or isPrime(q_user) == False:
+        print("Invalid key")
+    else:
+        n_user = p_user * q_user
+        if pow(sig, e_user, n_user) == H:
+            print(FLAG)
+        else:
+            print("Nope")
+
+
+if __name__ == "__main__":
+    signal.alarm(TIMEOUT)
+    handle()
+"""
