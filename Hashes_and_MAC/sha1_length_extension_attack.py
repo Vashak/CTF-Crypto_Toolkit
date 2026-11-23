@@ -70,3 +70,99 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+#!/usr/bin/env python3
+
+import signal
+import os
+import hashlib
+from base64 import b64encode, b64decode
+
+TIMEOUT = 300
+
+assert("FLAG" in os.environ)
+FLAG = os.environ["FLAG"]
+assert(FLAG.startswith("CCIT{"))
+assert(FLAG.endswith("}"))
+
+assert("SALT" in os.environ)
+SALT = os.environ["SALT"]
+assert(len(SALT) == 16)
+
+notes = {0: ("flag", "admin", FLAG)}
+
+counter = 1
+
+
+def add_note():
+    global counter
+
+    note = {}
+    print("Name of the note")
+    name = input("> ").strip()
+    print("Author of the note")
+    author = input("> ").strip()
+
+    if "&" in name or "=" in name or "&" in author or "=" in author:
+        print("Nice try")
+        return
+
+    note["id"] = str(counter)
+    note["name"] = name
+    note["author"] = author
+
+    super_secret_identifier = ""
+    for k in note:
+        super_secret_identifier += "&"+k+"="+note[k]
+    print("Content of the note")
+    content = input("> ").strip()
+
+    super_secret_identifier = b64encode(super_secret_identifier.encode())
+    check = hashlib.sha1(SALT.encode() + super_secret_identifier).hexdigest()
+    notes[counter] = (name, author, content)
+    counter += 1
+    print(
+        f"Successfully added note {name} with identifier {super_secret_identifier.decode()} and checksum {check}.")
+
+
+def retrieve_note():
+    print("Give me the note identifier")
+    identifier = b64decode(input("> ").strip().encode())
+    print("Give me the note checksum")
+    check = input("> ").strip().encode()
+    if hashlib.sha1(SALT.encode() + identifier).hexdigest().encode() != check:
+        print("Pls stop hacking")
+        return
+    note = {}
+    try:
+        data = identifier.split(b"&")[1:]
+        for el in data:
+            key, value = el.split(b"=")
+            note[key] = value
+        retrieved_note = notes[int(note[b"id"])]
+        if note[b"author"] in retrieved_note[1].encode() and note[b"name"] in retrieved_note[0].encode():
+            print(retrieved_note)
+    except:
+        print("Something wrong")
+
+
+def handle():
+    while True:
+        print("What do you want to do?")
+        print("1. Add note")
+        print("2. Retrieve note")
+        print("0. Exit")
+        choice = int(input("> ").strip())
+        if choice == 1:
+            add_note()
+        elif choice == 2:
+            retrieve_note()
+        else:
+            exit()
+
+
+if __name__ == "__main__":
+    signal.alarm(TIMEOUT)
+    handle()
+"""
