@@ -122,3 +122,74 @@ if p_original:
     print(f"\n[!!!] FLAG: {flag} [!!!]")
 else:
     print("[-] Brute force fallito.")
+"""
+from Crypto.Util.number import isPrime, getPrime
+import random
+import string
+import os
+from math import gcd
+
+flag = int.from_bytes(os.getenv("FLAG", "CCIT{redacted}").encode(), "big")
+
+def spin_digits(digs, const_idxs):
+    const_digits = [digs[idx] for idx in const_idxs]
+    digs = [random.choice(string.digits) for _ in range(len(digs))]
+    for i, idx in enumerate(const_idxs):
+        digs[idx] = const_digits[i]
+    return int(''.join(digs))
+
+def newPrime(p, const_idxs):
+    res = spin_digits(str(p), const_idxs)
+    while not isPrime(res):
+        res = spin_digits(str(p), const_idxs)
+    return res
+
+def respin(p, q, const_idxs_p, const_idxs_q):
+    new_p = newPrime(p, const_idxs_p)
+    new_q = newPrime(q, const_idxs_q)
+    new_n = new_p * new_q
+    while gcd(new_n, n) not in [1,n]:
+        new_p = newPrime(p, const_idxs_p)
+        new_q = newPrime(q, const_idxs_q)
+        new_n = new_p * new_q
+    return new_n
+
+def gen_key(nbits):
+    p = getPrime(nbits)
+    q = getPrime(nbits)
+    while len(str(p)) != 155 or len(str(q)) != 155:
+        p = getPrime(nbits)
+        q = getPrime(nbits) 
+
+    n = p*q
+    e = 65537
+    return p, q, n, e
+
+if __name__ == "__main__":
+    print("Welcome to the RSA Slot Machine. You can spin the primes as much as you want, but the jackpot is still encrypted!")
+
+    p, q, n, e = gen_key(512)
+    print(f"{n = }")
+
+    free_idxs_p = list(range(155))
+    free_idxs_q = list(range(155))
+    const_idxs_p = []
+    const_idxs_q = []
+    for _ in range(200):
+        action = input("Make your choice: ")        
+        if action == "respin":
+            new_n = respin(p, q, const_idxs_p, const_idxs_q)
+            print(f"{new_n = }")
+        elif action == "block_idx":
+            if len(free_idxs_p) <= 3:
+                print("You already blocked too many indexes!")
+                continue
+            new_idx_p = random.choice(free_idxs_p)
+            new_idx_q = random.choice(free_idxs_q)
+            const_idxs_p.append(new_idx_p)
+            const_idxs_q.append(new_idx_q)
+            free_idxs_p.remove(new_idx_p)
+            free_idxs_q.remove(new_idx_q)
+        elif action == "jackpot":
+            print("Encrypted jackpot:", pow(flag, e, n))
+"""           
