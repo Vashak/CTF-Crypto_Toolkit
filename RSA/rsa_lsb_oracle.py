@@ -106,3 +106,70 @@ while True:
         print(long_to_bytes(flag_int).decode(errors='ignore'))
 
         break 
+
+"""
+import signal
+import os
+import random
+import sys
+from Crypto.Util.number import getStrongPrime, getPrime, GCD, inverse, bytes_to_long
+
+TIMEOUT = 300
+
+assert("FLAG" in os.environ)
+FLAG = os.environ["FLAG"]
+assert(FLAG.startswith("CCIT{"))
+assert(FLAG.endswith("}"))
+assert(len(FLAG) < 25)
+
+def handle():
+    p, q = getStrongPrime(512), getStrongPrime(512)
+    n = p*q
+    phi = (p-1)*(q-1)
+    e = 2
+    while GCD(e,phi) > 1:
+        e = getPrime(64)
+
+    d = inverse(e,phi)
+
+    def enc(m,e,n):
+        return pow(m,e,n)
+
+    def dec(c,d,n):
+        return pow(c,d,n)%8
+
+    for i in range(150):
+        print(f"Attempt {i+1}: what do you want to do?")
+        print("1. Show Flag")
+        print("2. Encrypt")
+        print("3. Decrypt")
+
+        try:
+            choice = int(input("> "))
+        except:
+            sys.exit(0)
+
+        if choice == 1:
+            print(enc(bytes_to_long(FLAG.encode()),e,n))
+        elif choice == 2:
+            try:
+                m = int(input("> "))
+                assert m > 0
+                print(enc(m,e,n))
+            except:
+                print("Nope")
+        elif choice == 3:
+            try:
+                m = int(input("> "))
+                assert m > 0
+                print(dec(m,d,n))
+            except:
+                print("Nope")
+
+    print("Bye!")
+
+
+if __name__ == "__main__":
+    signal.alarm(TIMEOUT)
+    handle()
+"""
